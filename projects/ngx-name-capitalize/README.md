@@ -9,7 +9,6 @@ Angular pipe for smart capitalization of person names. Handles compound surnames
 
 Built on top of [name-capitalize](https://www.npmjs.com/package/name-capitalize).
 
----
 
 ## Compatibility
 
