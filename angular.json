@@ -1,0 +1,31 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "newProjectRoot": "projects",
+  "projects": {
+    "ngx-name-capitalize": {
+      "projectType": "library",
+      "root": "projects/ngx-name-capitalize",
+      "sourceRoot": "projects/ngx-name-capitalize/src",
+      "prefix": "lib",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:ng-packagr",
+          "options": {
+            "project": "projects/ngx-name-capitalize/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/ngx-name-capitalize/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/ngx-name-capitalize/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        }
+      }
+    }
+  },
+  "defaultProject": "ngx-name-capitalize"
+}
