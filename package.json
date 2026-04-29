@@ -1,6 +1,15 @@
 {
   "name": "ngx-name-capitalize",
   "version": "0.0.0",
+  "description": "Angular pipe for smart capitalization of person names. Handles particles, compound surnames, hyphenated names and Unicode characters.",
+  "author": "Gabriel Galilea",
+  "private": true,
+  "license": "MIT",
+  "homepage": "https://github.com/gabo2151/ngx-name-capitalize#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gabo2151/ngx-name-capitalize.git"
+  },
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -8,27 +17,41 @@
     "watch": "ng build --watch --configuration development",
     "test": "ng test"
   },
-  "private": true,
+  "bugs": {
+    "url": "https://github.com/gabo2151/ngx-name-capitalize/issues"
+  },
+  "keywords": [
+    "angular",
+    "pipe",
+    "name",
+    "capitalize",
+    "namecase",
+    "angular-pipe",
+    "name-capitalize",
+    "latin-names",
+    "unicode",
+    "typescript"
+  ],
   "dependencies": {
-    "@angular/animations": "~14.0.0",
-    "@angular/common": "~14.0.0",
-    "@angular/compiler": "~14.0.0",
-    "@angular/core": "~14.0.0",
-    "@angular/forms": "~14.0.0",
-    "@angular/platform-browser": "~14.0.0",
-    "@angular/platform-browser-dynamic": "~14.0.0",
-    "@angular/router": "~14.0.0",
+    "@angular/animations": "~16.0.0",
+    "@angular/common": "~16.0.0",
+    "@angular/compiler": "~16.0.0",
+    "@angular/core": "~16.0.0",
+    "@angular/forms": "~16.0.0",
+    "@angular/platform-browser": "~16.0.0",
+    "@angular/platform-browser-dynamic": "~16.0.0",
+    "@angular/router": "~16.0.0",
     "name-capitalize": "1.0.2",
-    "rxjs": "~7.5.0",
+    "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
-    "zone.js": "~0.11.4"
+    "zone.js": "~0.13.0"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "~14.0.0",
-    "@angular/cli": "~14.0.0",
-    "@angular/compiler-cli": "~14.0.0",
+    "@angular-devkit/build-angular": "~16.0.0",
+    "@angular/cli": "~16.0.0",
+    "@angular/compiler-cli": "~16.0.0",
     "@types/node": "^12.11.1",
-    "ng-packagr": "^14.0.0",
-    "typescript": "~4.7.0"
+    "ng-packagr": "^16.0.0",
+    "typescript": "~5.0.0"
   }
 }

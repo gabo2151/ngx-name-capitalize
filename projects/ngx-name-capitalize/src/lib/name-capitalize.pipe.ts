@@ -8,7 +8,7 @@ import { capitalizeName } from 'name-capitalize';
 })
 export class NameCapitalizePipe implements PipeTransform {
 
-  transform(value: string): unknown {
+  transform(value: string): string {
     return capitalizeName(value);
   }
 

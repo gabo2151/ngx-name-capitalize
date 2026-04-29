@@ -17,6 +17,7 @@ Built on top of [name-capitalize](https://www.npmjs.com/package/name-capitalize)
 |---------------------|---------|-------|
 | 1.x                 | 12 – 13 | >= 16 |
 | 2.x                 | 14 – 15 | >= 18 |
+| 3.x                 | 16+     | >= 18 |
 
 
 ## Installation
@@ -27,17 +28,6 @@ npm install ngx-name-capitalize
 
 
 ## Usage
-
-### NgModule (Angular 12 – 15)
-
-```typescript
-import { NgxNameCapitalizeModule } from 'ngx-name-capitalize';
-
-@NgModule({
-  imports: [NgxNameCapitalizeModule]
-})
-export class AppModule { }
-```
 
 ### Standalone (Angular 14+)
 
@@ -50,6 +40,17 @@ import { NameCapitalizePipe } from 'ngx-name-capitalize';
   template: `{{ name | namecase }}`
 })
 export class MyComponent { }
+```
+
+### NgModule (Angular 12 – 15)
+
+```typescript
+import { NgxNameCapitalizeModule } from 'ngx-name-capitalize';
+
+@NgModule({
+  imports: [NgxNameCapitalizeModule]
+})
+export class AppModule { }
 ```
 
 ### In your template
