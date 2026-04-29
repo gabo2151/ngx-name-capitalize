@@ -1,7 +1,7 @@
 # ngx-name-capitalize
 
-[![npm version](https://img.shields.io/npm/v/ngx-name-capitalize)](https://www.npmjs.org/package/ngx-name-capitalize)
-[![install size](https://packagephobia.com/badge?p=ngx-name-capitalize)](https://packagephobia.com/result?p=ngx-name-capitalize)
+[![npm version](https://img.shields.io/npm/v/ngx-name-capitalize/legacy-v2)](https://www.npmjs.org/package/ngx-name-capitalize/v/latest?tag=legacy-v2)
+[![install size](https://packagephobia.com/badge?p=ngx-name-capitalize@legacy-v2)](https://packagephobia.com/result?p=ngx-name-capitalize@legacy-v2)
 [![npm downloads](https://img.shields.io/npm/dm/ngx-name-capitalize)](https://npm-stat.com/charts.html?package=ngx-name-capitalize)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
@@ -9,7 +9,6 @@ Angular pipe for smart capitalization of person names. Handles compound surnames
 
 Built on top of [name-capitalize](https://www.npmjs.com/package/name-capitalize).
 
----
 
 ## Compatibility
 
@@ -17,6 +16,7 @@ Built on top of [name-capitalize](https://www.npmjs.com/package/name-capitalize)
 |---------------------|---------|-------|
 | 1.x                 | 12 – 13 | >= 16 |
 | 2.x                 | 14 – 15 | >= 18 |
+| 3.x                 | 16+     | >= 18 |
 
 
 ## Installation
@@ -27,17 +27,6 @@ npm install ngx-name-capitalize
 
 
 ## Usage
-
-### NgModule (Angular 12 – 15)
-
-```typescript
-import { NgxNameCapitalizeModule } from 'ngx-name-capitalize';
-
-@NgModule({
-  imports: [NgxNameCapitalizeModule]
-})
-export class AppModule { }
-```
 
 ### Standalone (Angular 14+)
 
@@ -50,6 +39,17 @@ import { NameCapitalizePipe } from 'ngx-name-capitalize';
   template: `{{ name | namecase }}`
 })
 export class MyComponent { }
+```
+
+### NgModule (Angular 12 – 15)
+
+```typescript
+import { NgxNameCapitalizeModule } from 'ngx-name-capitalize';
+
+@NgModule({
+  imports: [NgxNameCapitalizeModule]
+})
+export class AppModule { }
 ```
 
 ### In your template

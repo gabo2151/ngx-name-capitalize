@@ -1,14 +1,38 @@
 {
   "name": "ngx-name-capitalize",
   "version": "0.0.0",
+  "description": "Angular pipe for smart capitalization of person names. Handles particles, compound surnames, hyphenated names and Unicode characters.",
+  "author": "Gabriel Galilea",
+  "license": "MIT",
+  "homepage": "https://github.com/gabo2151/ngx-name-capitalize#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gabo2151/ngx-name-capitalize.git"
+  },
+  "bugs": {
+    "url": "https://github.com/gabo2151/ngx-name-capitalize/issues"
+  },
+  "keywords": [
+    "angular",
+    "pipe",
+    "name",
+    "capitalize",
+    "namecase",
+    "angular-pipe",
+    "name-capitalize",
+    "latin-names",
+    "unicode",
+    "typescript"
+  ],
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "build:lib": "npx -p @angular/cli@14 ng build ngx-name-capitalize",
+    "publish": "cd dist/ngx-name-capitalize && npm publish --access public --tag legacy-v2"
   },
-  "private": true,
   "dependencies": {
     "@angular/animations": "~14.0.0",
     "@angular/common": "~14.0.0",
@@ -18,7 +42,7 @@
     "@angular/platform-browser": "~14.0.0",
     "@angular/platform-browser-dynamic": "~14.0.0",
     "@angular/router": "~14.0.0",
-    "name-capitalize": "1.0.2",
+    "name-capitalize": "^2.0.0",
     "rxjs": "~7.5.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.11.4"
