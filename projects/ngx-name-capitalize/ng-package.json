@@ -3,9 +3,6 @@
   "dest": "../../dist/ngx-name-capitalize",
   "allowedNonPeerDependencies": ["name-capitalize"],
   "lib": {
-    "entryFile": "src/public-api.ts",
-    "umdModuleIds": {
-      "name-capitalize": "nameCapitalize"
-    }
+    "entryFile": "src/public-api.ts"
   }
 }

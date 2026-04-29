@@ -27,5 +27,8 @@
       }
     }
   },
-  "defaultProject": "ngx-name-capitalize"
+  "defaultProject": "ngx-name-capitalize",
+  "cli": {
+    "analytics": false
+  }
 }

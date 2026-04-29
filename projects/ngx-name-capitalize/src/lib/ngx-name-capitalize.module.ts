@@ -4,7 +4,7 @@ import { NameCapitalizePipe } from './name-capitalize.pipe';
 
 
 @NgModule({
-  declarations: [NameCapitalizePipe],
+  imports: [NameCapitalizePipe],
   exports: [NameCapitalizePipe],
 })
 export class NgxNameCapitalizeModule {}
