@@ -65,6 +65,33 @@ export class AppModule { }
 <!-- Output: Jean-Pierre Dupont -->
 ```
 
+### Options
+
+The pipe forwards an optional `NameCapitalizeOptions` object to the underlying
+[name-capitalize](https://www.npmjs.com/package/name-capitalize) engine
+(available from `1.3.0` / `2.2.0` / `3.2.0`):
+
+```html
+{{ 'ronald mcdonald' | namecase:{ mcPrefix: true } }}
+<!-- Output: Ronald McDonald -->
+
+{{ 'dick van dyke' | namecase:{ ignoreParticles: ['van'] } }}
+<!-- Output: Dick Van Dyke -->
+```
+
+| Option            | Type                 | Description                                          |
+|-------------------|----------------------|------------------------------------------------------|
+| `particles`       | `Iterable<string>`   | Replace the built-in particle list entirely.         |
+| `extraParticles`  | `Iterable<string>`   | Add extra particles on top of the built-in list.     |
+| `ignoreParticles` | `Iterable<string>`   | Remove particles from the built-in list.             |
+| `mcPrefix`        | `boolean`            | Capitalize the letter after `Mc` (`mcdonald` → `McDonald`). |
+
+The `NameCapitalizeOptions` type is re-exported for use in your components:
+
+```typescript
+import { NameCapitalizeOptions } from 'ngx-name-capitalize';
+```
+
 ### In your component
 
 ```typescript
