@@ -28,20 +28,7 @@ npm install ngx-name-capitalize
 
 ## Usage
 
-### Standalone (Angular 14+)
-
-```typescript
-import { NameCapitalizePipe } from 'ngx-name-capitalize';
-
-@Component({
-  standalone: true,
-  imports: [NameCapitalizePipe],
-  template: `{{ name | namecase }}`
-})
-export class MyComponent { }
-```
-
-### NgModule (Angular 12 – 15)
+### NgModule (Angular 12 – 13)
 
 ```typescript
 import { NgxNameCapitalizeModule } from 'ngx-name-capitalize';
@@ -51,6 +38,8 @@ import { NgxNameCapitalizeModule } from 'ngx-name-capitalize';
 })
 export class AppModule { }
 ```
+
+> Using Angular 14+? Install the `2.x` (standalone) or `3.x` line instead.
 
 ### In your template
 
@@ -63,6 +52,32 @@ export class AppModule { }
 
 {{ 'jean-pierre dupont' | namecase }}
 <!-- Output: Jean-Pierre Dupont -->
+```
+
+### Options
+
+The pipe forwards an optional `NameCapitalizeOptions` object to the underlying
+[name-capitalize](https://www.npmjs.com/package/name-capitalize) engine:
+
+```html
+{{ 'ronald mcdonald' | namecase:{ mcPrefix: true } }}
+<!-- Output: Ronald McDonald -->
+
+{{ 'dick van dyke' | namecase:{ ignoreParticles: ['van'] } }}
+<!-- Output: Dick Van Dyke -->
+```
+
+| Option            | Type                 | Description                                          |
+|-------------------|----------------------|------------------------------------------------------|
+| `particles`       | `Iterable<string>`   | Replace the built-in particle list entirely.         |
+| `extraParticles`  | `Iterable<string>`   | Add extra particles on top of the built-in list.     |
+| `ignoreParticles` | `Iterable<string>`   | Remove particles from the built-in list.             |
+| `mcPrefix`        | `boolean`            | Capitalize the letter after `Mc` (`mcdonald` → `McDonald`). |
+
+The `NameCapitalizeOptions` type is re-exported for use in your components:
+
+```typescript
+import { NameCapitalizeOptions } from 'ngx-name-capitalize';
 ```
 
 ### In your component

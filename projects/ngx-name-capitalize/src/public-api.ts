@@ -4,3 +4,5 @@
 
 export * from './lib/name-capitalize.pipe';
 export * from './lib/ngx-name-capitalize.module';
+
+export type { NameCapitalizeOptions } from 'name-capitalize';
