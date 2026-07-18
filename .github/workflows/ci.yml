@@ -19,14 +19,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js 20
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           registry-url: https://registry.npmjs.org/
 
-      # Trusted Publishing (OIDC) needs npm >= 11.5.1; Node 20 ships npm 10.x.
-      # Pin to the 11.x line: npm@latest is now 12.x, which requires Node 22+.
+      # Trusted Publishing (OIDC) needs npm >= 11.5.1; Node ships npm 10.x.
+      # Pin to the 11.x line: it runs on both Node 20 and 22 and supports OIDC,
+      # while npm@latest (12.x) requires a very recent Node 22.22+/24.15+.
       - name: Upgrade npm for trusted publishing
         run: npm install -g npm@11
 
