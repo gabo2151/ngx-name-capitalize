@@ -19,11 +19,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js 18
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 22
           registry-url: https://registry.npmjs.org/
+
+      # Trusted Publishing (OIDC) needs npm >= 11.5.1; Node ships npm 10.x.
+      # Pin to the 11.x line: it supports OIDC and runs on Node 22, while
+      # npm@latest (12.x) requires a very recent Node 22.22+/24.15+.
+      - name: Upgrade npm for trusted publishing
+        run: npm install -g npm@11
 
       - name: Install dependencies
         run: npm ci
@@ -32,5 +38,5 @@ jobs:
         run: npx -p @angular/cli@14 ng build ngx-name-capitalize
 
       - name: Publish to NPM
-        run: npm publish --provenance --access public
+        run: npm publish --provenance --access public --tag legacy-v2
         working-directory: dist/ngx-name-capitalize
