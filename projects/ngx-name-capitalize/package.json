@@ -1,6 +1,6 @@
 {
   "name": "ngx-name-capitalize",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "Angular pipe for smart capitalization of person names. Handles particles, compound surnames, hyphenated names and Unicode characters.",
   "author": "Gabriel Galilea",
   "license": "MIT",
@@ -29,7 +29,7 @@
     "@angular/core": "^14.0.0"
   },
   "dependencies": {
-    "name-capitalize": "^2.0.0",
+    "name-capitalize": "^2.2.0",
     "tslib": "^2.3.0"
   }
 }

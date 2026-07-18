@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { capitalizeName } from 'name-capitalize';
+import { capitalizeName, NameCapitalizeOptions } from 'name-capitalize';
 
 
 @Pipe({
@@ -8,8 +8,11 @@ import { capitalizeName } from 'name-capitalize';
 })
 export class NameCapitalizePipe implements PipeTransform {
 
-  transform(value: string): unknown {
-    return capitalizeName(value);
+  transform(value: string, options?: NameCapitalizeOptions): string {
+    if (!value) {
+      return '';
+    }
+    return capitalizeName(value, options);
   }
 
 }
