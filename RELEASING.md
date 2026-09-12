@@ -18,6 +18,21 @@ branch is the 2.x line, so its floor is Angular 14. Unlike `main`, it also carri
 This branch must **never** move the `latest` dist-tag. Angular 16+ users have to keep
 resolving 3.x.
 
+## Releases on this line are rare, and that is fine
+
+Unlike `main`, this line's verified range cannot grow: it is 14 and 15, permanently. So
+there is no "a new Angular shipped" release here. Expect to publish only when a fix is
+backported from `main`.
+
+The README still carries the verified range and the workflow badge, and the `compat` job
+runs `--write` and **fails if the README claims a range CI did not link**. That is the
+guard against the range drifting from reality once nobody is looking at this branch
+regularly.
+
+If long gaps between releases here start reading as abandonment, the honest fix is the
+README's "Project status" section — which states plainly that this line is frozen by
+design and points Angular 16+ users at `3.x` — not a version bump with nothing in it.
+
 ## Steps
 
 1. **Bump the version** in `projects/ngx-name-capitalize/package.json`. It must stay on

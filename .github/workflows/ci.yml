@@ -96,8 +96,21 @@ jobs:
           name: dist
           path: dist/
 
+      # `--write` regenerates the verified range in README.md from this run. On
+      # `main` a diff means a new Angular shipped and a pull request is opened. Here
+      # the range is frozen at 14 – 15, so a diff can only mean the README claims
+      # something that was not verified — which should fail the build.
       - name: Link against every supported Angular major
-        run: node scripts/verify-angular-compat.mjs
+        run: node scripts/verify-angular-compat.mjs --write
+
+      - name: Fail if the README claims a range that was not verified
+        run: |
+          if ! git diff --quiet -- README.md; then
+            echo "::error::README.md's verified range does not match what CI just linked."
+            git --no-pager diff -- README.md
+            exit 1
+          fi
+          echo "README.md matches the verified range."
 
   # name-capitalize is an open-ended peer dependency, so consumers can resolve a
   # newer engine than this branch locks. Run the suite against whatever it
