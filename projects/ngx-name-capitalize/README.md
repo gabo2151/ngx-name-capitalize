@@ -5,19 +5,33 @@
 [![npm downloads](https://img.shields.io/npm/dm/ngx-name-capitalize)](https://npm-stat.com/charts.html?package=ngx-name-capitalize)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Angular pipe for smart capitalization of person names. Handles compound surnames, particles (de, del, la, van, von...), hyphenated names, apostrophes, and Unicode characters.
+Angular pipe for smart capitalization of person names. Handles compound surnames, particles (de, del, la, van, von…), hyphenated names, apostrophes, and Unicode characters.
 
 Built on top of [name-capitalize](https://www.npmjs.com/package/name-capitalize).
 
-
 ## Compatibility
 
-| ngx-name-capitalize | Angular | Node  |
-|---------------------|---------|-------|
-| 1.x                 | 12 – 13 | >= 16 |
-| 2.x                 | 14 – 15 | >= 18 |
-| 3.x                 | 16+     | >= 18 |
+| ngx-name-capitalize | Angular | npm tag | Status |
+| --- | --- | --- | --- |
+| 3.x | 16 and above | `latest` | Active |
+| 2.x | 14 – 15 | `legacy-v2` | Maintenance |
+| 1.x | 12 – 13 | `legacy-v1` | Maintenance |
 
+```bash
+npm install ngx-name-capitalize              # Angular 16+
+npm install ngx-name-capitalize@legacy-v2    # Angular 14 – 15
+npm install ngx-name-capitalize@legacy-v1    # Angular 12 – 13
+```
+
+A new major of this package means **one thing only: the minimum supported Angular
+version went up**. It is not an API break. `3.x` therefore has no upper bound — every
+release is linked against every Angular major from 16 up to the current one in CI
+([`scripts/verify-angular-compat.mjs`](scripts/verify-angular-compat.mjs)), so support
+for a new Angular does not wait on a release here.
+
+> **Upgrading from 3.2.0 or earlier?** Those versions declared `peerDependencies` of
+> `^16.0.0`, which npm reads as "16 and nothing else", so installing them on Angular 17+
+> failed with `ERESOLVE`. 3.3.0 fixes the range. The library code was always compatible.
 
 ## Installation
 
@@ -25,10 +39,13 @@ Built on top of [name-capitalize](https://www.npmjs.com/package/name-capitalize)
 npm install ngx-name-capitalize
 ```
 
+`name-capitalize` is a peer dependency and is installed automatically by npm 7+. Keeping
+it a peer means you can upgrade the formatting engine on your own schedule, and that your
+app has a single copy of it even if it also depends on `name-capitalize` directly.
 
 ## Usage
 
-### Standalone (Angular 14+)
+### Standalone component
 
 ```typescript
 import { NameCapitalizePipe } from 'ngx-name-capitalize';
@@ -41,7 +58,7 @@ import { NameCapitalizePipe } from 'ngx-name-capitalize';
 export class MyComponent { }
 ```
 
-### NgModule (Angular 16+)
+### NgModule
 
 ```typescript
 import { NgxNameCapitalizeModule } from 'ngx-name-capitalize';
@@ -51,6 +68,8 @@ import { NgxNameCapitalizeModule } from 'ngx-name-capitalize';
 })
 export class AppModule { }
 ```
+
+Both work on every supported Angular version — pick whichever matches your app.
 
 ### In your template
 
@@ -65,30 +84,13 @@ export class AppModule { }
 <!-- Output: Jean-Pierre Dupont -->
 ```
 
-### Options
-
-The pipe forwards an optional `NameCapitalizeOptions` object to the underlying
-[name-capitalize](https://www.npmjs.com/package/name-capitalize) engine:
+Nullish values are accepted and render as an empty string, so `strictTemplates` is happy
+with the values templates actually carry:
 
 ```html
-{{ 'ronald mcdonald' | namecase:{ mcPrefix: true } }}
-<!-- Output: Ronald McDonald -->
-
-{{ 'dick van dyke' | namecase:{ ignoreParticles: ['van'] } }}
-<!-- Output: Dick Van Dyke -->
-```
-
-| Option            | Type                 | Description                                          |
-|-------------------|----------------------|------------------------------------------------------|
-| `particles`       | `Iterable<string>`   | Replace the built-in particle list entirely.         |
-| `extraParticles`  | `Iterable<string>`   | Add extra particles on top of the built-in list.     |
-| `ignoreParticles` | `Iterable<string>`   | Remove particles from the built-in list.             |
-| `mcPrefix`        | `boolean`            | Capitalize the letter after `Mc` (`mcdonald` → `McDonald`). |
-
-The `NameCapitalizeOptions` type is re-exported for use in your components:
-
-```typescript
-import { NameCapitalizeOptions } from 'ngx-name-capitalize';
+{{ user?.name | namecase }}          <!-- string | null | undefined -->
+{{ form.value.name | namecase }}
+{{ name$ | async | namecase }}
 ```
 
 ### In your component
@@ -108,19 +110,81 @@ export class MyComponent {
 }
 ```
 
+## Options
+
+The pipe forwards an optional `NameCapitalizeOptions` object to
+[name-capitalize](https://www.npmjs.com/package/name-capitalize):
+
+```html
+{{ 'ronald mcdonald' | namecase:{ mcPrefix: true } }}
+<!-- Output: Ronald McDonald -->
+
+{{ 'dick van dyke' | namecase:{ ignoreParticles: ['van'] } }}
+<!-- Output: Dick Van Dyke -->
+```
+
+| Option | Type | Description |
+| --- | --- | --- |
+| `particles` | `readonly string[] \| ReadonlySet<string>` | Replace the built-in particle list entirely. |
+| `extraParticles` | `readonly string[] \| ReadonlySet<string>` | Add particles on top of the built-in list. |
+| `ignoreParticles` | `readonly string[] \| ReadonlySet<string>` | Remove particles from the built-in list. |
+| `mcPrefix` | `boolean` | Capitalize the letter after `Mc` (`mcdonald` → `McDonald`). Default `false`. |
+| `particlesAfterHyphen` | `boolean` | Apply particle rules after a hyphen too. Default `false`. |
+| `strict` | `boolean` | Throw a `TypeError` on non-string input instead of returning `''`. Default `false`. |
+
+The `NameCapitalizeOptions` type is re-exported for use in your components:
+
+```typescript
+import { NameCapitalizeOptions } from 'ngx-name-capitalize';
+```
+
+Object literals written directly in a template are memoized by Angular, so the pipe stays
+pure and does not recompute on every change detection cycle. If you build the options
+object in code, hold it in a field rather than returning a fresh object from a getter.
+
+### Missing values and `strict`
+
+By default a missing name renders as an empty string — the right behavior for a template:
+
+```html
+{{ user?.name | namecase }}   <!-- null → '' -->
+```
+
+Pass `strict` when a missing name is a bug you want to hear about rather than a blank
+space, for example while formatting data you are about to persist:
+
+```html
+{{ record.name | namecase:{ strict: true } }}
+<!-- throws TypeError if record.name is not a string -->
+```
+
+The pipe pins `strict` to `false` unless you pass it, so a future release of the
+underlying engine cannot silently start throwing inside your templates.
 
 ## Examples
 
-| Input                            | Output                         |
-|----------------------------------|--------------------------------|
-| `JUAN DE LA MAZA`                | Juan de la Maza                |
-| `ludwig van beethoven`           | Ludwig van Beethoven           |
-| `BERNARDO O'HIGGINS`             | Bernardo O'Higgins             |
-| `jean-pierre dupont`             | Jean-Pierre Dupont             |
-| `gabriel garcía márquez`         | Gabriel García Márquez         |
+| Input | Output |
+| --- | --- |
+| `JUAN DE LA MAZA` | Juan de la Maza |
+| `ludwig van beethoven` | Ludwig van Beethoven |
+| `BERNARDO O'HIGGINS` | Bernardo O'Higgins |
+| `bernardo o’higgins` | Bernardo O’Higgins |
+| `jean-pierre dupont` | Jean-Pierre Dupont |
+| `gabriel garcía márquez` | Gabriel García Márquez |
 | `MIGUEL DE CERVANTES Y SAAVEDRA` | Miguel de Cervantes y Saavedra |
-| `van gogh`                       | Van Gogh                       |
+| `van gogh` | Van Gogh |
 
+Formatting rules, Unicode handling and known limitations (such as `Mac` prefixes and
+camel-cased names like `DeShawn`) are documented in
+[name-capitalize](https://www.npmjs.com/package/name-capitalize).
+
+## Changelog
+
+See [CHANGELOG.md](./CHANGELOG.md).
+
+## Contributing
+
+Release process, including the manual npm approval step: [RELEASING.md](./RELEASING.md).
 
 ## License
 

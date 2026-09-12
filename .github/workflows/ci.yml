@@ -1,3 +1,9 @@
+# IMPORTANT: this file must keep the name `ci.yml`.
+# The npm trusted publisher (OIDC) for ngx-name-capitalize is bound to
+# gabo2151/ngx-name-capitalize + the workflow FILENAME. Renaming this file breaks
+# publishing with an auth error that never mentions the filename, on this branch
+# and on v1/v2 alike.
+
 name: Node.js Package
 
 on:
@@ -5,12 +11,127 @@ on:
     types: [created]
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
+  # The package supports Angular majors that did not exist when it was built, and
+  # takes name-capitalize from an open peer range. Both can break without anyone
+  # pushing a commit, so the checks also run on their own once a week.
+  schedule:
+    - cron: '0 9 * * 1'
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
+  test:
+    name: Lint, typecheck and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Check both READMEs are in sync
+        run: npm run readme:check
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Run tests
+        run: npm test
+
+  # Angular 16's CLI wants an Angular-16-era Node, while trusted publishing wants a
+  # very new one. Building here and publishing the artifact in a separate job lets
+  # each step run on the Node it actually needs.
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 1
+
+  # Links the built bundle with every Angular major in the peer range, up to
+  # whatever is currently `latest`. This is what backs the README's compatibility
+  # table — and what will fail the week a future Angular stops accepting the
+  # partial declarations this package ships.
+  compat:
+    name: Verify Angular compatibility
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Download dist
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Link against every supported Angular major
+        run: node scripts/verify-angular-compat.mjs
+
+  # name-capitalize is an open-ended peer dependency, so consumers can resolve a
+  # newer engine than this repo locks. Run the suite against whatever it publishes
+  # today, to catch an engine change before users do.
+  engine-canary:
+    name: Test against name-capitalize@latest
+    runs-on: ubuntu-latest
+    # Informational: a failure here means the engine changed, not that this commit
+    # is bad. It should open an issue, not block a merge.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Upgrade the engine to latest
+        run: npm install --no-save name-capitalize@latest
+
+      - name: Report the resolved engine version
+        run: npm ls name-capitalize || true
+
+      - name: Run tests
+        run: npm test
+
   publish-npm:
+    name: Stage release on npm
+    needs: [test, build, compat]
     if: github.event_name == 'release'
     runs-on: ubuntu-latest
     permissions:
@@ -19,24 +140,54 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js 22
+      # Node 24 for npm >= 11.5.1, which trusted publishing (OIDC) requires. No
+      # Angular toolchain runs here — the package was already built by the `build`
+      # job on a Node that Angular 16 supports.
+      - name: Setup Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           registry-url: https://registry.npmjs.org/
 
-      # Trusted Publishing (OIDC) needs npm >= 11.5.1; Node ships npm 10.x.
-      # Pin to the 11.x line: it runs on both Node 20 and 22 and supports OIDC,
-      # while npm@latest (12.x) requires a very recent Node 22.22+/24.15+.
-      - name: Upgrade npm for trusted publishing
-        run: npm install -g npm@11
+      - name: Download dist
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Check the tag matches the package version
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PKG=$(node -p "require('./dist/ngx-name-capitalize/package.json').version")
+          if [ "$TAG" != "$PKG" ]; then
+            echo "::error::Release tag $GITHUB_REF_NAME does not match package version $PKG"
+            exit 1
+          fi
+          echo "Publishing version $PKG"
 
-      - name: Build
-        run: npx -p @angular/cli@16 ng build ngx-name-capitalize
-
-      - name: Publish to NPM
-        run: npm publish --provenance --access public
+      # STAGED publish: uploads the version but does NOT make it installable. A
+      # human approves it with 2FA (see the job summary, or RELEASING.md).
+      #
+      # No NODE_AUTH_TOKEN: the package authenticates via npm trusted publishing
+      # (OIDC). Nothing secret is stored in this repository.
+      - name: Stage release on NPM
+        run: npm stage publish --provenance --access public
         working-directory: dist/ngx-name-capitalize
+
+      - name: Explain the approval step
+        if: success()
+        run: |
+          {
+            echo "### 📦 \`${{ github.ref_name }}\` is staged, not yet public"
+            echo ""
+            echo "The version was uploaded to npm but **cannot be installed yet**."
+            echo "Approve it from a machine with your npm 2FA:"
+            echo ""
+            echo '```bash'
+            echo "npm stage list"
+            echo "npm stage view <stage-id>   # inspect before approving"
+            echo "npm stage approve <stage-id>"
+            echo '```'
+            echo ""
+            echo "To discard it instead: \`npm stage reject <stage-id>\`"
+          } >> "$GITHUB_STEP_SUMMARY"
