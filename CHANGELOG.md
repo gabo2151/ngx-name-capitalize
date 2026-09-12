@@ -9,7 +9,7 @@ version went up. It is not an API break. Three lines are maintained in parallel 
 (Angular 16+, `main`), `2.x` (Angular 14 – 15, `v2`) and `1.x` (Angular 12 – 13, `v1`) —
 and carry the same library source.
 
-## [3.3.0] - unreleased
+## [3.3.0] - 2026-09-12
 
 A packaging and correctness release. The library code was already compatible with
 Angular 16 through 22; the manifest said otherwise and the pipe quietly disabled one of
