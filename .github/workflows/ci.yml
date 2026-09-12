@@ -1,3 +1,11 @@
+# IMPORTANT: this file must keep the name `ci.yml`.
+# The npm trusted publisher (OIDC) for ngx-name-capitalize is bound to
+# gabo2151/ngx-name-capitalize + the workflow FILENAME. Renaming this file breaks
+# publishing with an auth error that never mentions the filename.
+#
+# This is the `v1` branch: the Angular 12 – 13 line, published under `legacy-v1`.
+# It must never move the `latest` dist-tag.
+
 name: Node.js Package
 
 on:
@@ -5,12 +13,127 @@ on:
     types: [created]
   push:
     branches: [v1]
+  pull_request:
+    branches: [v1]
+  # name-capitalize comes from a peer range, so it can change under this branch
+  # without anyone pushing a commit.
+  schedule:
+    - cron: '0 9 * * 1'
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
+  test:
+    name: Lint, typecheck and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node 16 is the newest release Angular 12's toolchain supports, and it is
+      # also the floor this line exists to serve.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 16
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Check both READMEs are in sync
+        run: npm run readme:check
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Run tests
+        run: npm test
+
+  # Angular 12's CLI wants Node 16 at the newest, while trusted publishing wants a
+  # very new one. Building here and publishing the artifact in a separate job lets
+  # each step run on the Node it actually needs.
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 16
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Upload dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 1
+
+  # Links the built bundle with every Angular major this branch's peer range
+  # promises — here 12 and 13, since the 2.x line takes over at 14.
+  compat:
+    name: Verify Angular compatibility
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The check itself only needs npm and Node; it is not bound to the Angular
+      # version this branch builds with.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Download dist
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Link against every supported Angular major
+        run: node scripts/verify-angular-compat.mjs
+
+  # This line pins the 1.x engine (`>=1.4.0 <2.0.0`), because name-capitalize 2.x
+  # requires Node 18. The canary therefore tracks `legacy`, not `latest`.
+  engine-canary:
+    name: Test against name-capitalize@legacy
+    runs-on: ubuntu-latest
+    # Informational: a failure here means the engine changed, not that this commit
+    # is bad. It should open an issue, not block a merge.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 16
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Upgrade the engine to the newest 1.x
+        run: npm install --no-save name-capitalize@legacy
+
+      - name: Report the resolved engine version
+        run: npm ls name-capitalize || true
+
+      - name: Run tests
+        run: npm test
+
   publish-npm:
+    name: Stage release on npm
+    needs: [test, build, compat]
     if: github.event_name == 'release'
     runs-on: ubuntu-latest
     permissions:
@@ -19,26 +142,64 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js 22
+      # Node 24 for npm >= 11.5.1, which trusted publishing (OIDC) requires. This is
+      # independent of the library's own Node 16 support: publishing only uploads the
+      # built dist/, it never runs it. No Angular toolchain runs here either.
+      - name: Setup Node.js 24
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           registry-url: https://registry.npmjs.org/
 
-      # Trusted Publishing (OIDC) needs npm >= 11.5.1; Node ships npm 10.x.
-      # Pin to the 11.x line: it supports OIDC and runs on Node 22, while
-      # npm@latest (12.x) requires a very recent Node 22.22+/24.15+.
-      # (This runner Node is independent from the library's Node >= 16
-      # support: publishing only uploads the built dist/, it does not run it.)
-      - name: Upgrade npm for trusted publishing
-        run: npm install -g npm@11
+      - name: Download dist
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Check the tag matches the package version, on the 1.x line
+        run: |
+          TAG="${GITHUB_REF_NAME#v}"
+          PKG=$(node -p "require('./dist/ngx-name-capitalize/package.json').version")
+          if [ "$TAG" != "$PKG" ]; then
+            echo "::error::Release tag $GITHUB_REF_NAME does not match package version $PKG"
+            exit 1
+          fi
+          case "$PKG" in
+            1.*) ;;
+            *) echo "::error::$PKG is not a 1.x version; the v1 branch must not publish it"; exit 1 ;;
+          esac
+          echo "Publishing version $PKG under the legacy-v1 tag"
 
-      - name: Build
-        run: npx -p @angular/cli@12 ng build ngx-name-capitalize
-
-      - name: Publish to NPM
-        run: npm publish --provenance --access public --tag legacy-v1
+      # STAGED publish under `legacy-v1`, never `latest`. The version becomes
+      # installable only after a manual `npm stage approve` with 2FA.
+      #
+      # No NODE_AUTH_TOKEN: the package authenticates via npm trusted publishing (OIDC).
+      - name: Stage release on NPM
+        run: npm stage publish --provenance --access public --tag legacy-v1
         working-directory: dist/ngx-name-capitalize
+
+      - name: Explain the approval step
+        if: success()
+        run: |
+          {
+            echo "### 📦 \`${{ github.ref_name }}\` is staged, not yet public"
+            echo ""
+            echo "The version was uploaded to npm but **cannot be installed yet**."
+            echo "Approve it from a machine with your npm 2FA:"
+            echo ""
+            echo '```bash'
+            echo "npm stage list"
+            echo "npm stage view <stage-id>   # inspect before approving"
+            echo "npm stage approve <stage-id>"
+            echo '```'
+            echo ""
+            echo "Then confirm the dist-tag did not touch \`latest\`:"
+            echo ""
+            echo '```bash'
+            echo "npm dist-tag ls ngx-name-capitalize"
+            echo "npm dist-tag add ngx-name-capitalize@<version> legacy-v1   # if needed"
+            echo '```'
+            echo ""
+            echo "To discard it instead: \`npm stage reject <stage-id>\`"
+          } >> "$GITHUB_STEP_SUMMARY"

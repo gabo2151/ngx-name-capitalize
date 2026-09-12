@@ -1,65 +1,41 @@
 {
-  "name": "ngx-name-capitalize",
+  "name": "ngx-name-capitalize-workspace",
   "version": "0.0.0",
-  "description": "Angular pipe for smart capitalization of person names. Handles particles, compound surnames, hyphenated names and Unicode characters.",
-  "author": "Gabriel Galilea",
+  "private": true,
+  "description": "Development workspace for the ngx-name-capitalize library, Angular 12 – 13 line. The published manifest lives in projects/ngx-name-capitalize/package.json.",
   "license": "MIT",
-  "homepage": "https://github.com/gabo2151/ngx-name-capitalize#readme",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/gabo2151/ngx-name-capitalize.git"
-  },
-  "bugs": {
-    "url": "https://github.com/gabo2151/ngx-name-capitalize/issues"
-  },
-  "keywords": [
-    "angular",
-    "pipe",
-    "name",
-    "capitalize",
-    "namecase",
-    "angular-pipe",
-    "name-capitalize",
-    "latin-names",
-    "unicode",
-    "typescript"
-  ],
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
-    "build": "ng build",
-    "watch": "ng build --watch --configuration development",
-    "test": "ng test",
-    "build:lib": "npx -p @angular/cli@12 ng build ngx-name-capitalize",
-    "publish": "cd dist/ngx-name-capitalize && npm publish --access public --tag legacy-v1"
-  },
-  "dependencies": {
-    "@angular/animations": "~12.2.0",
-    "@angular/common": "~12.2.0",
-    "@angular/compiler": "~12.2.0",
-    "@angular/core": "~12.2.0",
-    "@angular/forms": "~12.2.0",
-    "@angular/platform-browser": "~12.2.0",
-    "@angular/platform-browser-dynamic": "~12.2.0",
-    "@angular/router": "~12.2.0",
-    "name-capitalize": "^1.3.0",
-    "rxjs": "~6.6.0",
-    "tslib": "^2.3.0",
-    "zone.js": "~0.11.4"
+    "build": "npm run readme:sync && ng build ngx-name-capitalize",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "typecheck": "tsc --noEmit -p projects/ngx-name-capitalize/tsconfig.spec.json",
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "readme:sync": "node scripts/sync-readme.mjs",
+    "readme:check": "node scripts/sync-readme.mjs --check",
+    "verify": "npm run lint && npm run readme:check && npm run typecheck && npm test",
+    "compat": "node scripts/verify-angular-compat.mjs"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "~12.2.18",
     "@angular/cli": "~12.2.18",
+    "@angular/common": "~12.2.0",
+    "@angular/compiler": "~12.2.0",
     "@angular/compiler-cli": "~12.2.0",
-    "@types/jasmine": "~3.8.0",
-    "@types/node": "^12.11.1",
-    "jasmine-core": "~3.8.0",
-    "karma": "~6.3.0",
-    "karma-chrome-launcher": "~3.1.0",
-    "karma-coverage": "~2.0.3",
-    "karma-jasmine": "~4.0.0",
-    "karma-jasmine-html-reporter": "~1.7.0",
+    "@angular/core": "~12.2.0",
+    "@angular/platform-browser": "~12.2.0",
+    "@angular/platform-browser-dynamic": "~12.2.0",
+    "@babel/core": "^7.24.0",
+    "@biomejs/biome": "2.5.13",
+    "@types/jest": "^28.1.8",
+    "jest": "^28.1.3",
+    "jest-preset-angular": "^12.2.6",
+    "name-capitalize": "^1.4.0",
     "ng-packagr": "^12.1.1",
-    "typescript": "~4.3.5"
+    "rxjs": "~6.6.0",
+    "tslib": "^2.3.0",
+    "typescript": "~4.3.5",
+    "zone.js": "~0.11.4"
   }
 }
