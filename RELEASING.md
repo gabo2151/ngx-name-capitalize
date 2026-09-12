@@ -15,11 +15,35 @@ The major version tracks the **minimum supported Angular**, not API breakage. A 
 major is cut only when that floor rises — so a 4.x/`v3` split would mean "main now
 requires Angular 17+, and Angular 16 users stay on the `v3` branch".
 
-**A new Angular release is not a reason to cut a major, and usually not a reason to
-release at all.** `main` declares `@angular/core: ">=16.0.0"` with no upper bound, and
-CI links the built bundle against every Angular major up to whatever is current. When
-Angular 23 ships, the weekly run picks it up on its own; if it stays green, existing
-installs already work.
+**A new Angular release is never a reason to cut a major.** `main` declares
+`@angular/core: ">=16.0.0"` with no upper bound, and CI links the built bundle against
+every Angular major up to whatever is current. When Angular 23 ships, the weekly run
+picks it up on its own; if it stays green, existing installs already work — nobody has
+to wait for a release here.
+
+## The usual release: a widened verified range
+
+Most releases on this package will have no code change at all, and that is the intended
+steady state. The trigger looks like this:
+
+1. Angular ships a new major.
+2. The weekly `compat` job links the **published** artifact against it.
+3. If it passes, `record-verified-range` opens a pull request updating the README's
+   verified range — generated from that run, not written by hand.
+4. You merge it and cut a **minor**.
+
+That release is not busywork and not version churn: the package now documents support it
+did not document before, and the README is shipped content — it is what renders on the
+npm page. Follow the steps below exactly as for any other release.
+
+This matters beyond tidiness. A package that has not been published in two years reads as
+abandoned, and people avoid it. This one will genuinely have nothing to fix for long
+stretches, so the honest way to show it is alive is to publish *verification* on Angular's
+cadence — roughly twice a year — rather than to invent changes.
+
+The rule that keeps this honest: **every signal of activity must correspond to something
+that was actually checked.** Never publish a version whose only purpose is refreshing the
+date on npm, and never hand-edit the verified range to claim a version CI has not linked.
 
 ## Steps
 

@@ -21,6 +21,7 @@
 // Usage:
 //   node scripts/verify-angular-compat.mjs         # floor .. latest
 //   node scripts/verify-angular-compat.mjs 21 22   # only these majors
+//   node scripts/verify-angular-compat.mjs --write # also record the result in README.md
 
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -32,6 +33,9 @@ import { pathToFileURL } from 'node:url';
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const LIB_MANIFEST = path.join(ROOT, 'projects/ngx-name-capitalize/package.json');
 const DIST = path.join(ROOT, 'dist/ngx-name-capitalize');
+const README = path.join(ROOT, 'README.md');
+const BEGIN = '<!-- compat:begin -->';
+const END = '<!-- compat:end -->';
 
 const npm = (args, cwd) =>
   execFileSync('npm', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
@@ -155,6 +159,39 @@ async function verify(major, bundle, source) {
   }
 }
 
+/**
+ * Records the verified range in README.md, between the `compat` markers.
+ *
+ * Deliberately **no date**: this file would then change on every weekly run and
+ * open a pull request nobody needs. The range only moves when a new Angular major
+ * ships, so a diff here always means something happened. Recency is carried by the
+ * workflow badge, which is live and links to the runs themselves.
+ */
+function record(majors) {
+  const text = readFileSync(README, 'utf8');
+  const start = text.indexOf(BEGIN);
+  const stop = text.indexOf(END);
+  if (start === -1 || stop === -1) {
+    console.error(`README.md is missing the ${BEGIN} / ${END} markers.`);
+    process.exit(1);
+  }
+
+  const list = majors.join(', ').replace(/, (\d+)$/, ' and $1');
+  // Phrased so it reads correctly on every branch: `main` runs to the current
+  // Angular release, the legacy lines stop at their ceiling.
+  const line =
+    `Verified against Angular **${list}** — every major this line supports.\n` +
+    'Re-checked weekly by CI, by linking the published artifact the way your build does.';
+
+  const updated = text.slice(0, start + BEGIN.length) + `\n${line}\n` + text.slice(stop);
+  if (updated === text) {
+    console.log('README.md already records this range.');
+    return;
+  }
+  writeFileSync(README, updated);
+  console.log('README.md updated with the verified range.');
+}
+
 const bundle = findBundle();
 if (!bundle || !existsSync(bundle)) {
   console.error(`No built bundle under ${DIST}\nRun \`npm run build\` first.`);
@@ -183,4 +220,9 @@ if (results.includes(false)) {
   console.error('`peerDependencies` in projects/ngx-name-capitalize/package.json.');
   process.exit(1);
 }
+
 console.log(`\nAll ${results.length} Angular majors link cleanly.`);
+
+if (process.argv.includes('--write')) {
+  record(majors);
+}
