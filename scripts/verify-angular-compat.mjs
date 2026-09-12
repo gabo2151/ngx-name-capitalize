@@ -10,10 +10,13 @@
 // this script does, once per Angular major, so the compatibility table in the
 // README is an assertion rather than a hope.
 //
-// The range is derived, not hardcoded: the floor comes from the library's
-// `peerDependencies`, the ceiling from whatever `@angular/core` currently
-// publishes as `latest`. A new Angular major is therefore picked up automatically
-// the day it ships — nothing here needs editing to widen support.
+// The range is derived, not hardcoded: it is read straight out of the library's
+// `peerDependencies`. On `main` there is no ceiling, so the range runs up to
+// whatever `@angular/core` currently publishes — a new Angular major is picked up
+// the day it ships, with nothing to edit here. On the `v1`/`v2` branches the peer
+// range does carry a ceiling, and this stops there.
+//
+// The script is identical on all three branches. Keep it that way when backporting.
 //
 // Usage:
 //   node scripts/verify-angular-compat.mjs         # floor .. latest
@@ -28,32 +31,56 @@ import { pathToFileURL } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const LIB_MANIFEST = path.join(ROOT, 'projects/ngx-name-capitalize/package.json');
-const BUNDLE = path.join(ROOT, 'dist/ngx-name-capitalize/fesm2022/ngx-name-capitalize.mjs');
+const DIST = path.join(ROOT, 'dist/ngx-name-capitalize');
 
 const npm = (args, cwd) =>
   execFileSync('npm', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 
-/** Lowest Angular major the library's peerDependencies allow. */
-function peerFloor() {
-  const { peerDependencies } = JSON.parse(readFileSync(LIB_MANIFEST, 'utf8'));
-  const range = peerDependencies['@angular/core'];
-  const match = /(\d+)/.exec(range);
-  if (!match) {
-    throw new Error(`Could not read an Angular floor out of peer range "${range}"`);
+/**
+ * The flattened bundle a consumer's build actually loads. Read from the generated
+ * manifest rather than hardcoded, because the file name tracks the emitted target
+ * and differs per branch (`fesm2022` on main, `fesm2015` on the legacy lines).
+ */
+function findBundle() {
+  const manifest = path.join(DIST, 'package.json');
+  if (!existsSync(manifest)) {
+    return null;
   }
-  return Number(match[1]);
+  const pkg = JSON.parse(readFileSync(manifest, 'utf8'));
+  const entry = pkg.module ?? pkg.exports?.['.']?.default;
+  return entry ? path.join(DIST, entry) : null;
 }
 
-/** Highest Angular major currently published. */
-function latestMajor() {
-  return Number(npm(['view', '@angular/core', 'version']).split('.')[0]);
+/**
+ * The Angular majors the library's `peerDependencies` promise. The floor always
+ * exists; a ceiling exists only on the legacy branches, where a newer line has
+ * taken over above them. Without one, support runs to whatever Angular publishes
+ * today — which is the point: a new Angular major needs no edit here.
+ */
+function declaredRange() {
+  const { peerDependencies } = JSON.parse(readFileSync(LIB_MANIFEST, 'utf8'));
+  const range = peerDependencies['@angular/core'];
+
+  const floor = /(?:>=|\^|~)?\s*(\d+)/.exec(range);
+  if (!floor) {
+    throw new Error(`Could not read an Angular floor out of peer range "${range}"`);
+  }
+
+  const ceiling = /<\s*(\d+)/.exec(range);
+  const latest = Number(npm(['view', '@angular/core', 'version']).split('.')[0]);
+
+  return {
+    from: Number(floor[1]),
+    // `<16.0.0` means 15 is the last supported major.
+    to: ceiling ? Math.min(Number(ceiling[1]) - 1, latest) : latest,
+  };
 }
 
 /**
  * Links the bundle with one Angular version's compiler, in a throwaway install so
  * it never collides with the workspace's own Angular.
  */
-async function verify(major, source) {
+async function verify(major, bundle, source) {
   const dir = mkdtempSync(path.join(tmpdir(), `ngx-namecase-ng${major}-`));
   try {
     writeFileSync(
@@ -100,7 +127,7 @@ async function verify(major, source) {
     };
 
     const { code } = transformSync(source, {
-      filename: BUNDLE,
+      filename: bundle,
       plugins: [createEs2015LinkerPlugin({ fileSystem, logger, linkerJitMode: false })],
       configFile: false,
       babelrc: false,
@@ -128,24 +155,27 @@ async function verify(major, source) {
   }
 }
 
-if (!existsSync(BUNDLE)) {
-  console.error(`Bundle not found at ${BUNDLE}\nRun \`npm run build\` first.`);
+const bundle = findBundle();
+if (!bundle || !existsSync(bundle)) {
+  console.error(`No built bundle under ${DIST}\nRun \`npm run build\` first.`);
   process.exit(1);
 }
 
 const requested = process.argv.slice(2).map(Number).filter(Number.isFinite);
-const floor = peerFloor();
 const majors =
   requested.length > 0
     ? requested
-    : Array.from({ length: latestMajor() - floor + 1 }, (_, i) => floor + i);
+    : (() => {
+        const { from, to } = declaredRange();
+        return Array.from({ length: to - from + 1 }, (_, i) => from + i);
+      })();
 
-console.log(`Linking the built bundle with Angular ${majors[0]}–${majors[majors.length - 1]}`);
+console.log(`Linking ${path.relative(ROOT, bundle)} with Angular ${majors.join(', ')}`);
 
-const source = readFileSync(BUNDLE, 'utf8');
+const source = readFileSync(bundle, 'utf8');
 const results = [];
 for (const major of majors) {
-  results.push(await verify(major, source));
+  results.push(await verify(major, bundle, source));
 }
 
 if (results.includes(false)) {
