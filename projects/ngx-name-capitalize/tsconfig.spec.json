@@ -1,0 +1,16 @@
+/* Test-only compiler options, so editors and `npm run typecheck` resolve Jest globals. */
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../../out-tsc/spec",
+    "module": "commonjs",
+    "target": "es2020",
+    "declaration": false,
+    "types": [
+      "jest"
+    ]
+  },
+  "include": [
+    "src/**/*.ts"
+  ]
+}
