@@ -18,6 +18,8 @@ on:
   # pushing a commit, so the checks also run on their own once a week.
   schedule:
     - cron: '0 9 * * 1'
+  # So the weekly-only jobs can be exercised without waiting for Monday.
+  workflow_dispatch:
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -109,7 +111,7 @@ jobs:
   record-verified-range:
     name: Record a newly supported Angular
     needs: build
-    if: github.event_name == 'schedule'
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     permissions:
       contents: write
