@@ -28,9 +28,16 @@ steady state. The trigger looks like this:
 
 1. Angular ships a new major.
 2. The weekly `compat` job links the **published** artifact against it.
-3. If it passes, `record-verified-range` opens a pull request updating the README's
-   verified range — generated from that run, not written by hand.
-4. You merge it and cut a **minor**.
+3. If it passes, `record-verified-range` pushes a branch updating the README's verified
+   range — generated from that run, not written by hand — and opens an issue with a
+   one-click link to turn it into a pull request.
+4. You open and merge it, then cut a **minor**.
+
+It pushes a branch instead of calling `gh pr create` on purpose. Creating pull requests
+from a workflow requires the repository's *"Allow GitHub Actions to create and approve
+pull requests"* setting, which also lets Actions **approve** them. Pushing a branch needs
+only `contents: write` and gets you to the same place, without widening what a
+compromised workflow could do. Leave that setting off.
 
 That release is not busywork and not version churn: the package now documents support it
 did not document before, and the README is shipped content — it is what renders on the
