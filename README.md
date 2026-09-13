@@ -47,7 +47,7 @@ most recently, exactly the way your own build would, and runs the test suite aga
 newest `name-capitalize`. The badge above is that job; it links to the runs themselves.
 
 <!-- compat:begin -->
-Verified against Angular **16, 17, 18, 19, 20, 21 and 22** — every major this line supports.
+Verified against Angular **16, 17, 18, 19, 20 and 21** — every major this line supports.
 Re-checked weekly by CI, by linking the published artifact the way your build does.
 <!-- compat:end -->
 
