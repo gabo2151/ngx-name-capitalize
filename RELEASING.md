@@ -17,6 +17,21 @@ carries a **ceiling** (`<14.0.0`), because newer lines take over above it.
 
 This branch must **never** move the `latest` dist-tag.
 
+## Releases on this line are rare, and that is fine
+
+Unlike `main`, this line's verified range cannot grow: it is 12 and 13, permanently. So
+there is no "a new Angular shipped" release here. Expect to publish only when a fix is
+backported from `main`.
+
+The README still carries the verified range and the workflow badge, and the `compat` job
+runs `--write` and **fails if the README claims a range CI did not link**. That is the
+guard against the range drifting from reality once nobody looks at this branch regularly.
+
+If long gaps between releases here start reading as abandonment, the honest fix is the
+README's "Project status" section — which states plainly that this line is frozen by
+design and points Angular 14+ users at the newer lines — not a version bump with nothing
+in it.
+
 ## Steps
 
 1. **Bump the version** in `projects/ngx-name-capitalize/package.json`. It must stay on
