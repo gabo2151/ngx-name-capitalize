@@ -183,7 +183,7 @@ function record(majors) {
     `Verified against Angular **${list}** — every major this line supports.\n` +
     'Re-checked weekly by CI, by linking the published artifact the way your build does.';
 
-  const updated = text.slice(0, start + BEGIN.length) + `\n${line}\n` + text.slice(stop);
+  const updated = `${text.slice(0, start + BEGIN.length)}\n${line}\n${text.slice(stop)}`;
   if (updated === text) {
     console.log('README.md already records this range.');
     return;
